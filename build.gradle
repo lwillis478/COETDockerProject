@@ -18,6 +18,7 @@ dependencies {
 	implementation 'org.springframework:spring-web'
 	compileOnly 'org.projectlombok:lombok:1.18.26'
 	annotationProcessor 'org.projectlombok:lombok:1.18.26'
+	implementation 'org.springframework.session:spring-session-jdbc'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
