@@ -9,24 +9,25 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/items")
 public class ItemController {
     @Autowired
     private ItemRepository itemRepository;
 
-    @GetMapping("/items")
-    List<Item> getAllItems()
+    @GetMapping()
+    public List<Item> getAllItems()
     {
         return itemRepository.findAll();
     }
 
-    @PostMapping("/items")
-    Item postItem(@RequestBody Item toPost)
+    @PostMapping()
+    public Item postItem(@RequestBody Item toPost)
     {
         return itemRepository.save(toPost);
     }
 
-    @DeleteMapping("/items/{id}")
-    void deleteItem(@PathVariable UUID id)
+    @DeleteMapping("/{id}")
+    public void deleteItem(@PathVariable UUID id)
     {
         itemRepository.deleteById(id);
     }
