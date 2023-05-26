@@ -4,10 +4,11 @@ package com.daftgoods.daftgoodsservice.controller;
 import com.daftgoods.daftgoodsservice.UserLoginException;
 import com.daftgoods.daftgoodsservice.core.user.User;
 import com.daftgoods.daftgoodsservice.core.user.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/")
@@ -16,16 +17,36 @@ public class UserController {
     private UserRepository userRepository;
 
     @GetMapping("/user")
-    public User getUser()
+    public String getUser(HttpSession currentSession)
     {
-        return userRepository.findFirstBy().orElseThrow(() -> new UserLoginException());
+        String currentUser = (String) currentSession.getAttribute("username");
+
+        if (currentUser != null) return "Logged in as " + currentUser;
+
+        else return "Not logged in";
+    }
+
+    @PostMapping("/user")
+    public User createUser(@RequestBody User toPost)
+    {
+        BCryptPasswordEncoder passHasher = new BCryptPasswordEncoder(10);
+        String hashedPass = passHasher.encode(toPost.getPassword());
+        toPost.setPassword(hashedPass);
+        return userRepository.save(toPost);
     }
 
     @PostMapping("/login")
-    public User loginUser(@RequestBody User toLogin)
+    public String loginUser(@RequestBody User toLogin, HttpServletRequest loginRequest)
     {
-        userRepository.deleteAll();
-        return userRepository.save(toLogin);
+        User loginAs = userRepository.findById(toLogin.getId()).orElseThrow(() -> new UserLoginException("User not found"));
+        BCryptPasswordEncoder passHasher = new BCryptPasswordEncoder(10);
+        if(passHasher.matches(toLogin.getPassword(), loginAs.getPassword()))
+        {
+            loginRequest.getSession().setAttribute("username", loginAs.getUsername());
+            return "Logged in as " + loginAs.getUsername();
+        }
+
+        else return "Could not log in, password is incorrect";
     }
 
     @DeleteMapping("/logout")

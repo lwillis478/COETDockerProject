@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value = HttpStatus.NOT_FOUND)
 public class UserLoginException extends RuntimeException {
-    public UserLoginException()
+    public UserLoginException(String message)
     {
-        super("No user currently logged in.");
+        super(message);
     }
 }
