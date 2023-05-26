@@ -7,26 +7,29 @@ import com.daftgoods.daftgoodsservice.core.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
+@RequestMapping("/")
 public class UserController {
     @Autowired
     private UserRepository userRepository;
 
     @GetMapping("/user")
-    User getUser()
+    public User getUser()
     {
         return userRepository.findFirstBy().orElseThrow(() -> new UserLoginException());
     }
 
     @PostMapping("/login")
-    User loginUser(@RequestBody User toLogin)
+    public User loginUser(@RequestBody User toLogin)
     {
         userRepository.deleteAll();
         return userRepository.save(toLogin);
     }
 
     @DeleteMapping("/logout")
-    Integer logoutUser()
+    public Integer logoutUser()
     {
 //        userRepository.delete(userRepository.findFirstBy().orElseThrow(() -> new UserLoginException()));
         return userRepository.deleteFirstBy();
