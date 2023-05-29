@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.*;
+
 @RestController
 @RequestMapping("/")
 public class UserController {
@@ -17,36 +19,34 @@ public class UserController {
     private UserRepository userRepository;
 
     @GetMapping("/user")
-    public String getUser(HttpSession currentSession)
+    public Map<String, String> getUser(HttpSession currentSession)
     {
-        String currentUser = (String) currentSession.getAttribute("username");
+        List<String> attrNames = Collections.list(currentSession.getAttributeNames());
 
-        if (currentUser != null) return "Logged in as " + currentUser;
+        if(attrNames.contains("userid") && attrNames.contains("username"))
+        {
+            String currentUserName = (String) currentSession.getAttribute("username");
+            String currentUserID = currentSession.getAttribute("userid").toString();
+            return new HashMap<>() {
+                { put("id", currentUserID); }
+                { put("username", currentUserName); }
+            };
+        }
 
-        else return "Not logged in";
-    }
-
-    @PostMapping("/user")
-    public User createUser(@RequestBody User toPost)
-    {
-        BCryptPasswordEncoder passHasher = new BCryptPasswordEncoder(10);
-        String hashedPass = passHasher.encode(toPost.getPassword());
-        toPost.setPassword(hashedPass);
-        return userRepository.save(toPost);
+        else throw new UserLoginException("Not logged in");
     }
 
     @PostMapping("/login")
     public String loginUser(@RequestBody User toLogin, HttpServletRequest loginRequest)
     {
-        User loginAs = userRepository.findById(toLogin.getId()).orElseThrow(() -> new UserLoginException("User not found"));
         BCryptPasswordEncoder passHasher = new BCryptPasswordEncoder(10);
-        if(passHasher.matches(toLogin.getPassword(), loginAs.getPassword()))
-        {
-            loginRequest.getSession().setAttribute("username", loginAs.getUsername());
-            return "Logged in as " + loginAs.getUsername();
-        }
+        String hashedPass = passHasher.encode(toLogin.getPassword());
+        toLogin.setPassword(hashedPass);
+        User createdUser = userRepository.save(toLogin);
 
-        else return "Could not log in, password is incorrect";
+        loginRequest.getSession().setAttribute("username", createdUser.getUsername());
+        loginRequest.getSession().setAttribute("userid", createdUser.getId());
+        return "Logged in as " + loginRequest.getSession().getAttribute("username");
     }
 
     @DeleteMapping("/logout")
