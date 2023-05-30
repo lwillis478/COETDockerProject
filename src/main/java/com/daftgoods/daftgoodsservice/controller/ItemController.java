@@ -3,6 +3,7 @@ package com.daftgoods.daftgoodsservice.controller;
 import com.daftgoods.daftgoodsservice.core.item.Item;
 import com.daftgoods.daftgoodsservice.core.item.ItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +16,7 @@ public class ItemController {
     private ItemRepository itemRepository;
 
     @GetMapping()
+    @Cacheable("itemcache")
     public List<Item> getAllItems()
     {
         return itemRepository.findAll();
