@@ -37,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public String loginUser(@RequestBody User toLogin, HttpServletRequest loginRequest)
+    public Map<String, String> loginUser(@RequestBody User toLogin, HttpServletRequest loginRequest)
     {
         BCryptPasswordEncoder passHasher = new BCryptPasswordEncoder(10);
         String hashedPass = passHasher.encode(toLogin.getPassword());
@@ -46,13 +46,43 @@ public class UserController {
 
         loginRequest.getSession().setAttribute("username", createdUser.getUsername());
         loginRequest.getSession().setAttribute("userid", createdUser.getId());
-        return "Logged in as " + loginRequest.getSession().getAttribute("username");
+
+        return new HashMap<>() {
+            { put("id", toLogin.getId().toString()); }
+            { put("username", toLogin.getUsername()); }
+        };
     }
 
     @DeleteMapping("/logout")
-    public Integer logoutUser()
+    public Map<String, String> logoutUser(HttpSession currentSession)
     {
 //        userRepository.delete(userRepository.findFirstBy().orElseThrow(() -> new UserLoginException()));
-        return userRepository.deleteFirstBy();
+
+        String res = "";
+        String statusCode = "";
+        List<String> attrNames = Collections.list(currentSession.getAttributeNames());
+
+        if(attrNames.contains("userid") && attrNames.contains("username"))
+        {
+            String username = (String) currentSession.getAttribute("username");
+            currentSession.removeAttribute("userid");
+            currentSession.removeAttribute("username");
+            res = "Logged out user " + username;
+            statusCode = "200";
+        }
+
+        else
+        {
+            res = "No user currently logged in";
+            statusCode = "404";
+        }
+
+        String statusCodeFinal = statusCode;
+        String resFinal = res;
+
+        return new HashMap<>() {
+            { put("statuscode", statusCodeFinal); }
+            { put("message", resFinal); }
+        };
     }
 }
